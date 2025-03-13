@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to Table Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .subtable { margin-left: 20px; border: 1px solid #aaa; display: none; }
+    </style>
+</head>
+<body>
+    <h1>JSON to Table Converter</h1>
+    <textarea id="jsonInput" placeholder="Paste your JSON here..."></textarea>
+    <button onclick="convertToTable()">Convert to Table</button>
+    <div id="output"></div>
+
+    <script>
+        function createTable(data) {
+            const table = document.createElement("table");
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+
+            const headers = Object.keys(data[0]);
+            headers.forEach(headerText => {
+                const th = document.createElement("th");
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+
+            const tbody = table.createTBody();
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                headers.forEach(header => {
+                    const cell = row.insertCell();
+                    if (typeof item[header] === 'object' && item[header] !== null) {
+                        const expandBtn = document.createElement("button");
+                        expandBtn.textContent = "+";
+                        expandBtn.onclick = () => {
+                            const subTable = cell.querySelector(".subtable");
+                            subTable.style.display = subTable.style.display === "none" ? "block" : "none";
+                        };
+                        cell.appendChild(expandBtn);
+
+                        const subTableDiv = document.createElement("div");
+                        subTableDiv.classList.add("subtable");
+                        subTableDiv.appendChild(createTable([item[header]]));
+                        cell.appendChild(subTableDiv);
+                    } else {
+                        cell.textContent = item[header] || "";
+                    }
+                });
+            });
+            return table;
+        }
+
+        function convertToTable() {
+            const jsonInput = document.getElementById("jsonInput").value;
+            const outputDiv = document.getElementById("output");
+            try {
+                const jsonData = JSON.parse(jsonInput);
+                if (!Array.isArray(jsonData)) {
+                    throw new Error("JSON data should be an array of objects.");
+                }
+
+                outputDiv.innerHTML = ""; // Clear previous content
+                outputDiv.appendChild(createTable(jsonData));
+            } catch (error) {
+                outputDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
